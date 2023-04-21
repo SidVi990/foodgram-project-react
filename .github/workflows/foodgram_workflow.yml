@@ -1,10 +1,6 @@
 name: Foodgram Workflow
 
-on:
-  push:
-    branches: [ master ]
-    paths-ignore:
-      - '**/README.md'
+on: [push]
 
 jobs:
 
@@ -81,6 +77,7 @@ jobs:
       - tests
       - build_and_push_backend_to_docker_hub
       - build_and_push_frontend_to_docker_hub
+    if: github.ref == 'refs/heads/master'
     steps:
       - name: Executing remote ssh commands to deploy
         uses: appleboy/ssh-action@master
@@ -89,9 +86,9 @@ jobs:
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            sudo docker compose stop
-            sudo docker compose rm backend
-            sudo docker compose rm frontend
+            sudo systemctl stop nginx
+            sudo systemctl stop postgresql  
+            rm .env
             sudo rm -f .env        
             sudo touch .env
             sudo echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
@@ -101,7 +98,9 @@ jobs:
             sudo echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
             sudo echo DB_HOST=${{ secrets.DB_HOST }} >> .env
             sudo echo DB_PORT=${{ secrets.DB_PORT }} >> .env
-            sudo docker compose up -d --build
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-frontend:latest
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-backend:latest
+            sudo docker-compose up -d
 
   send_message:
     runs-on: ubuntu-latest

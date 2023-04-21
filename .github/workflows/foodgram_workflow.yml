@@ -88,7 +88,6 @@ jobs:
           script: |
             sudo systemctl stop nginx
             sudo systemctl stop postgresql  
-            rm .env
             sudo rm -f .env        
             sudo touch .env
             sudo echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env

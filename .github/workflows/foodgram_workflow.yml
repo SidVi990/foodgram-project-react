@@ -87,8 +87,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             sudo systemctl stop nginx
-            sudo systemctl stop postgresql  
-            sudo rm -f .env        
+            sudo systemctl stop postgresql        
             sudo touch .env
             sudo echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
             sudo echo DB_ENGINE=${{ secrets.DB_ENGINE }} >> .env

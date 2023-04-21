@@ -1,12 +1,6 @@
 from django.contrib.admin import ModelAdmin, TabularInline, register
-from recipes.models import (
-    Favorite,
-    Ingredient,
-    IngredientsAmount,
-    Recipe,
-    ShoppingCart,
-    Tag,
-)
+from recipes.models import (Favorite, Ingredient, IngredientsAmount, Recipe,
+                            ShoppingCart, Tag)
 
 
 @register(Ingredient)

@@ -78,6 +78,7 @@ jobs:
             sudo echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
             sudo echo DB_HOST=${{ secrets.DB_HOST }} >> .env
             sudo echo DB_PORT=${{ secrets.DB_PORT }} >> .env
+            sudo echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
             sudo docker compose pull backend
             sudo docker compose rm frontend
             sudo docker compose pull frontend

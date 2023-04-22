@@ -1,19 +1,19 @@
 version: '3.8'
-
 services:
 
   db:
-    image: postgres:13.0-alpine
+    image: postgres:14.6-alpine
+    restart: always
     volumes:
-      - database:/var/lib/postgresql/data/
+      - postgres_data:/var/lib/postgresql/data/
     env_file:
       - ./.env
-    restart: always
 
   backend:
     image: sidvi990/foodgram-backend:latest
     restart: always
     volumes:
+      - data_value:/app/data/
       - static_value:/app/static/
       - media_value:/app/media/
     depends_on:
@@ -23,27 +23,28 @@ services:
 
   frontend:
     image: sidvi990/foodgram-frontend:latest
-    restart: always
     volumes:
-      - ../frontend/:/app/result_build/
+      - ./frontend/:/app/result_build/
+    depends_on:
+      - backend
 
   nginx:
-    image: nginx:1.21.3-alpine
+    image: nginx:1.19.3
+    restart: always
     ports:
       - "80:80"
-      - "443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ../frontend/build:/usr/share/nginx/html/
-      - ../docs/:/usr/share/nginx/html/api/docs/
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+      - ./frontend/build:/usr/share/nginx/html/
+      - ./docs/:/usr/share/nginx/html/api/docs/
+      - ./docs/openapi-schema.yml:/usr/share/nginx/html/api/docs/openapi-schema.yml
       - static_value:/var/html/static/
       - media_value:/var/html/media/
     depends_on:
       - frontend
-      - backend
-    restart: always
-
+      
 volumes:
+  postgres_data:
   static_value:
   media_value:
-  database:
+  data_value:

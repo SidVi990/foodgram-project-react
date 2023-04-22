@@ -3,10 +3,10 @@ from django.db.models import F
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
-from recipes.models import Ingredient, IngredientsAmount, Recipe, Tag
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from users.models import Subscribe
+from recipes.models import Ingredient, IngredientsAmount, Recipe, Tag
+# from users.models import Subscribe
 
 User = get_user_model()
 
@@ -37,7 +37,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
     def validate_username(self, value):
         """Запрещаем создание пользователя с именем 'me'."""
-        if value.lower() in ('me'):
+        if value.lower() == ('me'):
             raise ValidationError('Не корректное имя пользователя')
         return value
 
@@ -62,7 +62,7 @@ class CustomUserSerializer(UserSerializer):
         user = self.context.get('request').user
         if user.is_anonymous:
             return False
-        return Subscribe.objects.filter(user=user, author=obj.id).exists()
+        return user.follower.exists()
 
 
 class SubscribeSerializer(CustomUserSerializer):
@@ -156,19 +156,20 @@ class RecipeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {'ingredients': 'Для приготовления блюда нужны ингредиенты'}
             )
-        ingredient_list = []
+        ingredient_set = set()
         for ingredient_item in ingredients:
             ingredient = get_object_or_404(Ingredient,
                                            id=ingredient_item['id'])
-            if ingredient in ingredient_list:
+            if ingredient in ingredient_set:
                 raise serializers.ValidationError(
                     'Ингредиенты не должны повторяться!'
                 )
-            ingredient_list.append(ingredient)
-            if int(ingredient_item['amount']) < 0:
+            ingredient_set.add(ingredient)
+            amount = int(ingredient_item['amount'])
+            if amount <= 0 or amount >= 32000:
                 raise serializers.ValidationError({
                     'ingredients': ('Количество ингредиентов '
-                                    'должно быть больше чем 0!')
+                                    'должно быть в диапазоне от 1 до 31999!')
                 })
         attrs['ingredients'] = ingredients
         return attrs

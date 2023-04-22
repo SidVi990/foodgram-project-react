@@ -6,8 +6,6 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import (Favorite, Ingredient, IngredientsAmount, Recipe,
-                            ShoppingCart, Tag)
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -19,6 +17,8 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
 from rest_framework.response import Response
 from users.models import Subscribe
 
+from recipes.models import (Favorite, Ingredient, IngredientsAmount, Recipe,
+                            ShoppingCart, Tag)
 from .filters import FilterIngredient, FilterRecipe
 from .pagination import PageLimitPagination
 from .permissions import IsAuthorOrReadOnly
@@ -27,6 +27,12 @@ from .serializers import (CustomUserSerializer, IngredientSerializer,
                           SubscribeSerializer, TagSerializer)
 
 User = get_user_model()
+
+BEGIN_POSITION_X = 40
+BEGIN_POSITION_Y = 750
+POSITION_Y = 790
+FONT_SIZE = 11
+FONT_SIZE_HEADER = 14
 
 
 class CustomUserViewSet(UserViewSet):
@@ -164,6 +170,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def download_shopping_cart(self, request):
         """Скачиваем pdf файл со списком ингредиентов из корзины."""
+        global BEGIN_POSITION_Y
         buffer = io.BytesIO()
         shopping_cart = IngredientsAmount.objects.filter(
             recipe__shopping_cart__user=request.user
@@ -184,30 +191,25 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     'measurement_unit': measurement_unit,
                     'amount': amount,
                 }
-        begin_position_x, begin_position_y = 40, 750
         page = canvas.Canvas(buffer, pagesize=A4)
         pdfmetrics.registerFont(TTFont('FreeSans', 'data/FreeSans.ttf'))
-        page.setFont('FreeSans', 14)
+        page.setFont('FreeSans', FONT_SIZE_HEADER)
         page.setTitle('Список покупок')
         page.drawString(
-            begin_position_x,
-            begin_position_y + 40,
+            BEGIN_POSITION_X,
+            POSITION_Y,
             f'Список покупок для {request.user.get_full_name()}:'
         )
-        page.setFont('FreeSans', 11)
+        page.setFont('FreeSans', FONT_SIZE)
         for key, values in ingredients.items():
-            if begin_position_y < 100:
-                begin_position_y = 700
-                page.showPage()
-                page.setFont('FreeSans', 11)
             page.drawString(
-                begin_position_x,
-                begin_position_y,
+                BEGIN_POSITION_X,
+                BEGIN_POSITION_Y,
                 f'{key.capitalize()} - '
                 f'{values["amount"]} '
                 f'{values["measurement_unit"]}.'
             )
-            begin_position_y -= 30
+            BEGIN_POSITION_Y -= 30
         page.showPage()
         page.save()
         buffer.seek(0)

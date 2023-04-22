@@ -49,6 +49,7 @@ class RecipeAdmin(ModelAdmin):
 class IngredientsAmountAdmin(ModelAdmin):
     list_display = ("id", "recipe", "ingredient", "amount")
     search_fields = ("recipe__name", "ingredient__name")
+    min_num = 1
 
 
 @register(Favorite)

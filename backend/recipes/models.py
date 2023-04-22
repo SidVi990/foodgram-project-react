@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
 
@@ -96,6 +96,10 @@ class Recipe(models.Model):
                 limit_value=1,
                 message='Нельзя приготовить блюдо настолько быстро!'
             ),
+            MaxValueValidator(
+                limit_value=600,
+                message='Слишком долго для приготовления!'
+            ),
         )
     )
     pub_date = models.DateTimeField(
@@ -134,6 +138,10 @@ class IngredientsAmount(models.Model):
             MinValueValidator(
                 limit_value=1, message='Должно быть больше нуля!'
             ),
+            MaxValueValidator(
+                limit_value=32000,
+                message='Слишком долго для приготовления!'
+            ),
         )
     )
 
@@ -147,6 +155,9 @@ class IngredientsAmount(models.Model):
                 name='unique ingredient for recipe'
             )
         ]
+
+    def __str__(self):
+        return f'{self.amount}'
 
 
 class Favorite(models.Model):
@@ -167,10 +178,17 @@ class Favorite(models.Model):
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
+        ordering = ('recipe',)
         constraints = [
             UniqueConstraint(fields=['user', 'recipe'],
                              name='unique_favourite')
         ]
+
+    def __str__(self):
+        return (
+            f'Рецепт {self.recipe} добавлен в избранное '
+            f'пользователем {self.user}'
+        )
 
 
 class ShoppingCart(models.Model):
@@ -191,7 +209,14 @@ class ShoppingCart(models.Model):
     class Meta:
         verbose_name = 'Корзина'
         verbose_name_plural = 'Корзина'
+        ordering = ('recipe',)
         constraints = [
             UniqueConstraint(fields=['user', 'recipe'],
                              name='unique_shopping_cart')
         ]
+
+    def __str__(self):
+        return (
+            f'Рецепт {self.recipe} добавлен в корзину '
+            f'пользователем {self.user}'
+        )

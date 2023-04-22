@@ -3,10 +3,9 @@ from django.db.models import F
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
+from recipes.models import Ingredient, IngredientsAmount, Recipe, Tag
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-
-from recipes.models import Ingredient, IngredientsAmount, Recipe, Tag
 
 User = get_user_model()
 

@@ -3,11 +3,15 @@ from django.db.models import F
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
-from recipes.models import Ingredient, IngredientsAmount, Recipe, Tag
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from recipes.models import Ingredient, IngredientsAmount, Recipe, Tag
+
 User = get_user_model()
+
+MIN_AMOUNT = 0
+MAX_AMOUNT = 32000
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
@@ -59,9 +63,8 @@ class CustomUserSerializer(UserSerializer):
     def get_is_subscribed(self, obj):
         """Получаем данные о подписках пользователя."""
         user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return user.follower.exists()
+        if not user.is_anonymous:
+            return user.follower.exists()
 
 
 class SubscribeSerializer(CustomUserSerializer):
@@ -137,16 +140,14 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         """Проверяем находится ли рецепт в избранном у пользователя."""
         user = self.context['request'].user
-        if user.is_anonymous:
-            return False
-        return user.favorites.filter(recipe=obj).exists()
+        if not user.is_anonymous:
+            return user.favorites.filter(recipe=obj).exists()
 
     def get_is_in_shopping_cart(self, obj):
         """Проверяем находится ли рецепт в корзине у пользователя."""
         user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return user.shopping_cart.filter(recipe=obj).exists()
+        if not user.is_anonymous:
+            return user.shopping_cart.filter(recipe=obj).exists()
 
     def validate(self, attrs):
         """Проверяем корректность вводных данных."""
@@ -165,7 +166,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                 )
             ingredient_set.add(ingredient)
             amount = int(ingredient_item['amount'])
-            if amount <= 0 or amount >= 32000:
+            if amount <= MIN_AMOUNT or amount >= MAX_AMOUNT:
                 raise serializers.ValidationError({
                     'ingredients': ('Количество ингредиентов '
                                     'должно быть в диапазоне от 1 до 31999!')
@@ -204,7 +205,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.tags.clear()
         tags_data = self.initial_data.get('tags')
         instance.tags.set(tags_data)
-        IngredientsAmount.objects.filter(recipe=instance).all().delete()
+        IngredientsAmount.objects.filter(recipe=instance).delete()
         self.create_ingredients(validated_data.get('ingredients'), instance)
         instance.save()
         return instance

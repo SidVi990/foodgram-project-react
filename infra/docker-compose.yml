@@ -13,13 +13,13 @@ services:
     image: sidvi990/foodgram-backend:latest
     restart: always
     volumes:
-      - static_value:/app/static/
+      - static_value:/app/backend_static/
       - media_value:/app/media/
     depends_on:
       - db
     env_file:
       - ./.env
-  
+
   frontend:
     image: sidvi990/foodgram-frontend:latest
     volumes:
@@ -34,8 +34,8 @@ services:
       - ./frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
       - frontend_value:/usr/share/nginx/html/
-      - static_value:var/html/static/
-      - media_dir:var/html/media/
+      - static_value:/usr/share/nginx/html/backend_static/
+      - media_value:/usr/share/nginx/html/media/
     depends_on:
       - backend
       - frontend

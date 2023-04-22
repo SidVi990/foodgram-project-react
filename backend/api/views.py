@@ -6,8 +6,6 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import (Favorite, Ingredient, IngredientsAmount, Recipe,
-                            ShoppingCart, Tag)
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -19,6 +17,8 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
 from rest_framework.response import Response
 from users.models import Subscribe
 
+from recipes.models import (Favorite, Ingredient, IngredientsAmount, Recipe,
+                            ShoppingCart, Tag)
 from .filters import FilterIngredient, FilterRecipe
 from .pagination import PageLimitPagination
 from .permissions import IsAuthorOrReadOnly
@@ -31,6 +31,7 @@ User = get_user_model()
 BEGIN_POSITION_X = 40
 BEGIN_POSITION_Y = 750
 POSITION_Y = 790
+SPACING = 30
 FONT_SIZE = 11
 FONT_SIZE_HEADER = 14
 
@@ -209,7 +210,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 f'{values["amount"]} '
                 f'{values["measurement_unit"]}.'
             )
-            BEGIN_POSITION_Y -= 30
+            BEGIN_POSITION_Y -= SPACING
         page.showPage()
         page.save()
         buffer.seek(0)
